@@ -96,7 +96,7 @@ class Observation:
 
     @property
     def n_nodes(self) -> int:
-        """Return the number of nodes belonging to the obeservation."""
+        """Return the number of nodes belonging to the observation."""
         return self.values.shape[0]
 
     @property
