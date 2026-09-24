@@ -2,6 +2,8 @@
 
 A Python framework for reconstructing, forecasting, and quantifying uncertainty in dynamical systems from finite, irregular, and partial observations.
 
+The primary objective is to support both **engineering applications and scientific research**: a usable inference tool with explicit assumptions, reproducible experiments, and quantitative evidence of reliability. Each release should deliver working software together with validation of its behavior and limitations.
+
 The project is built around a practical problem:
 
 > Given an incomplete record of a dynamical system, what can be reconstructed, how uncertain is that reconstruction, and where would an additional observation be most valuable?
@@ -725,7 +727,137 @@ finite-sampling-graph-dynamics/
 
 # Development Roadmap
 
-Each development stage introduces new machinery to address a limitation exposed by the preceding stage.
+The following plan separates changes to existing code, near-term additions, and future capabilities. All unchecked work is planned, not implemented. The current implementation status is recorded in [Status](#status).
+
+The V1--V7 labels below identify capability areas rather than a strict implementation order. In particular, basic Bayesian inference should be introduced early, and state-space inference should provide the foundation for graph dynamics.
+
+## Changes to Existing Code
+
+Priorities: **P0** establishes correctness and installability; **P1** completes a usable inference workflow; **P2** follows demonstrated needs and measured benefits.
+
+| Priority | Change | Scope and acceptance criteria |
+| --- | --- | --- |
+| P0 | Repair test collection | Move the three nested trajectory tests to module scope, correct `np.zeroes`, and verify that the intended tests are collected and executed. |
+| P0 | Correct time validation | Replace default relative-tolerance comparisons of initial timestamps with an explicit time precision policy; document time units. |
+| P0 | Validate numerical values | Require finite values in complete states and trajectories. For observations, validate entries marked as observed while allowing NaN in unobserved entries. |
+| P0 | Define boundary behavior | Specify behavior for zero volatility, empty inputs, no usable increments, and missing left or right observations. Explicitly define whether unequal endpoints at zero volatility are rejected or treated as a zero-noise bridge limit. |
+| P0 | Complete package configuration | Populate `pyproject.toml` with package metadata, dependencies, supported Python versions, and a standard installation workflow verified in a clean environment. |
+| P1 | Separate inference from sampling | Make clear that existing bridge functions return random posterior samples; expose point estimates, uncertainty, and sampling through distinct operations. |
+| P1 | Specify array ownership | Define copying and sharing rules so that external array mutations cannot unexpectedly change states, observations, trajectories, or graphs. |
+| P1 | Specify graph conventions | Document edge direction, weight constraints, and scale conventions; let each dynamical model validate the graph assumptions it requires. |
+| P1 | Refactor experiment scripts | Separate configuration, execution, evaluation, and plotting, and avoid running experiments on module import. |
+| P1 | Keep documentation aligned | Distinguish implemented behavior, the next deliverable, and long-term plans; label proposed APIs as examples rather than available features. |
+| P2 | Improve bridge sampling performance | Replace front-removal from Python lists with a queue and use ordered-time searches where useful; benchmark improvements while preserving the joint distribution. |
+
+## Near-Term Additions
+
+The first usable release should complete Brownian inference and evaluation. A basic Bayesian extension, V7-A, should follow that closed loop before more complex models are introduced.
+
+| Addition | Initial scope | Acceptance criteria |
+| --- | --- | --- |
+| Analytical posterior | Brownian conditional means, marginal variances, and covariance available on demand. | Match analytical formulas; deterministic predictions require no random generator. |
+| Posterior result object | Means, variances, intervals, and joint path sampling. | Keep output semantics consistent and preserve temporal dependence in samples without requiring a dense covariance matrix for every query. |
+| Multi-observation reconstruction | Locate neighboring real observations and reconstruct across multiple intervals. | Preserve exact observations and define behavior outside observed boundaries. |
+| Partial and asynchronous observations | Give each node-feature component its own observation times under the independent Brownian model. | Never use masked values; require an appropriate prior or report a limitation when observations do not identify the requested result. |
+| Volatility estimation | Maximum-likelihood estimation for driftless Brownian motion without measurement noise. | Verify estimation error in simulations and handle insufficient observations explicitly. |
+| Basic forecasting | Propagate a Brownian distribution beyond the latest available observation. | Use only past information and recover the model's analytical mean and variance. |
+| Basic Bayesian inference: V7-A | An inverse-gamma prior and posterior for variance, Student-t posterior prediction, and joint path sampling. | Match analytical and Monte Carlo results; assess prior sensitivity and small-sample calibration. |
+| Simple user interface | A short workflow for fitting, posterior queries, and forecasting. | A complete example takes observations through inference and evaluation without exposing internal machinery. |
+| Observation splitting | Random missingness, contiguous gaps, asynchronous observations, and node holdouts. | Keep training, validation, and test information separate, including parameter fitting and graph construction. |
+| Evaluation metrics | RMSE, MAE, marginal predictive scores, interval coverage, and interval width. | Score genuinely withheld observations and distinguish marginal scores from joint trajectory likelihoods. |
+| Reproducible experiment records | Save configuration, random seeds, parameters, software revision, and metrics. | Another user can reproduce the experiment and identify its assumptions. |
+| Automated checks and documentation | Installation checks, tests, basic static checks, a quick start, and a complete example. | Run successfully in a clean environment and keep examples consistent with available APIs. |
+| Data adapters | NumPy first, followed by DataFrame and CSV support. | Preserve timestamps, node identities, feature identities, and observation masks. |
+
+Key correctness checks should include:
+
+- Adding query times does not change the posterior distribution at existing query times; identical random samples across different grids are not required.
+- Generated latent states never count as additional observations or tighten the parameter posterior merely because the query grid is denser.
+- With fixed parameters in a linear Gaussian model, adding real observations does not increase posterior covariance in the positive-semidefinite ordering.
+- A Bayesian path sample draws shared parameters once, then draws the entire path conditionally; it does not draw unrelated parameters at each query time.
+- Scale, variance, and interval semantics are explicit, including cases where posterior moments do not exist.
+
+The common benchmark suite should distinguish three questions:
+
+1. **Known parameters, correct model:** is the inference implementation correct?
+2. **Unknown parameters, correct model:** how much error comes from parameter estimation, and what changes when parameter uncertainty is included?
+3. **Misspecified model:** how reliable are predictions and uncertainty estimates when assumptions fail?
+
+## Future Capabilities and Dependencies
+
+| Order | Capability | Dependency and intended evidence |
+| --- | --- | --- |
+| 1 | Ornstein--Uhlenbeck dynamics and exact irregular-time transitions | Complete the Brownian workflow first; introduce mean reversion and validate a second reference model. |
+| 2 | Measurement noise, Kalman filtering, and RTS smoothing | Verify transition and observation models; distinguish latent process variation from measurement error. |
+| 3 | Graph-coupled linear SDEs and correlated process noise | Retain a reliable independent temporal baseline and validate joint covariance. |
+| 4 | Graph ablations and structure selection | Compare no graph, a correct graph, and perturbed graphs under the same evaluation protocol. |
+| 5 | One complete real application | Secure suitable data and define domain constraints and metrics; deliver an end-to-end example and report. |
+| 6 | Joint Bayesian parameter inference: V7-B | Validate the likelihood and investigate identifiability before inferring dynamical and noise parameters jointly. |
+| 7 | Model diagnostics | Check residuals, calibration, misspecification, outliers, and prior sensitivity using posterior predictions. |
+| 8 | Hierarchical Bayesian models | Introduce partial parameter pooling across nodes, features, or trajectories when data support heterogeneous behavior. |
+| 9 | Budget-constrained observation design | Require credible uncertainty estimates and explicit measurement costs and target risks. |
+| 10 | Computational scaling | Use profiling to justify sparse methods, low-rank approximations, caching, and on-demand computation; retain a small exact reference implementation. |
+| 11 | Graph and model uncertainty: V7-C | Start with a small set of candidate structures after fixed-structure inference is reliable. |
+| 12 | Nonlinear, time-varying, jump, and event dynamics | Add only when a concrete problem demonstrates that the existing models are insufficient. |
+
+For linear Gaussian models, a shared transition interface should expose the quantities in
+
+$$
+X_{t+\Delta}=F_\Delta X_t+b_\Delta+w_t,
+\qquad w_t\sim\mathcal N(0,Q_\Delta).
+$$
+
+Brownian, OU, and graph models can then share inference machinery. Extract common interfaces when at least two working models need them; do not force future event or nonlinear models into an unsuitable abstraction.
+
+Keep the architecture in three cooperating parts:
+
+- **Inference core:** data representations, dynamics, parameter estimation, and posterior results.
+- **Experiment system:** observation splits, baselines, metrics, and reproducible reports.
+- **Application adapters:** domain data, assumptions, constraints, and evaluation criteria.
+
+## Development Workflow and Release Gates
+
+Develop one complete workflow at a time:
+
+1. Define the practical limitation, supported inputs, and excluded cases.
+2. State the mathematical assumptions and expected behavior, including relevant limiting cases.
+3. Write a minimal user-facing example before expanding the API.
+4. Connect input handling, computation, results, and one runnable example.
+5. Validate against analytical results, an independent implementation, or meaningful statistical experiments; measure performance when it is part of the objective.
+6. Update documentation and deliver a focused commit or pull request describing behavior, evidence, and limitations.
+
+Every release has two acceptance gates:
+
+| Engineering acceptance | Research acceptance |
+| --- | --- |
+| Clear input/output contracts and explicit failure behavior. | Explicit assumptions, estimands, and evaluation objectives. |
+| A short, usable API and an end-to-end example. | Simple, fair baselines and analytical or independent reference checks. |
+| Reproducible installation, execution, and result records. | Separate fitting, model selection, and test data. |
+| Measured runtime and memory for the intended scale. | Report uncertainty, failure cases, and model misspecification, not only successful examples. |
+| Documentation matches implemented capabilities. | Experiments and their conclusions can be reproduced. |
+
+Keep fast deterministic checks separate from heavier Monte Carlo validation, with statistical tolerances justified by sampling error. An implemented method is not complete merely because it produces a plausible plot.
+
+The first deliverable is an installable Python package, a complete usage example, automated tests, and a reproducible accuracy and uncertainty report.
+
+The recommended implementation sequence is:
+
+```text
+Correct existing implementation and tests
+    -> Analytical posterior and multi-observation reconstruction
+    -> Parameter estimation and held-out evaluation
+    -> Basic Bayesian inference (V7-A)
+    -> OU and noisy state-space inference
+    -> Graph dynamics and graph misspecification experiments
+    -> One complete real application
+    -> Advanced Bayesian inference, observation design, and scaling
+```
+
+Defer simultaneous development of multiple application domains, unrestricted graph learning, large collections of deep-learning or sampling frameworks, GPU/distributed execution without a measured bottleneck, and plugin systems for models that do not yet exist.
+
+## Capability Areas: V1--V7
+
+Each capability area introduces machinery to address a concrete limitation. The descriptions below retain the original roadmap labels; the dependency order above determines implementation priority.
 
 ## V1 — Finite-Observation Inference
 
@@ -876,16 +1008,18 @@ V_{\max}
 \frac{t_R-t_L}{4}.
 $$
 
-An interval may therefore be refined while
+For conditional path generation, this quantity may guide subdivision while
 
 $$
 V_{\max}>\varepsilon.
 $$
 
+This is uncertainty conditional on the current path boundaries, which may include sampled latent states. After integrating out those states, the posterior uncertainty conditional on the original observations is unchanged. Use numerical or downstream task error to justify computational stopping tolerances; do not interpret subdivision as new evidence or as a reduction of observational uncertainty.
+
 ### Core Methods
 
 - adaptive interval refinement;
-- uncertainty-based refinement;
+- conditional path refinement and task-specific numerical error control;
 - dyadic subdivision;
 - explicit stopping tolerances;
 - native irregular-time computation.
@@ -944,6 +1078,8 @@ Observe again
 
 ## V7 — Bayesian Uncertainty
 
+Bayesian inference is a staged capability, not work deferred until all other roadmap areas are complete. State inference with fixed parameters, parameter uncertainty, and structural uncertainty are separate levels.
+
 Earlier stages may estimate a parameter such as volatility by a single value
 
 $$
@@ -977,6 +1113,16 @@ $$
 - uncertainty-aware reconstruction;
 - uncertainty-aware forecasting;
 - eventual uncertainty over structural assumptions.
+
+### Staged Delivery
+
+| Stage | Timing | Scope |
+| --- | --- | --- |
+| V7-A | After the Brownian reconstruction and evaluation workflow | Conjugate inference for a shared Brownian variance under explicit independence and noiseless-observation assumptions; Student-t predictions; joint path sampling; prior sensitivity and small-sample calibration. |
+| V7-B | After reliable state-space and graph inference | Joint inference for coupling, mean reversion, process noise, and measurement noise; use the validated filtering likelihood where applicable, with identifiability and computational diagnostics. |
+| V7-C | After fixed-structure inference and model comparison | Uncertainty over a limited set of candidate graphs and models, model averaging, and observation design that accounts for parameter or structural uncertainty. |
+
+Point-estimate and Bayesian workflows should share result conventions while recording whether parameter uncertainty has been integrated out. Under the basic noiseless Brownian bridge model, learning the variance changes the predictive distribution, not the linear conditional mean. Bayesian inference does not automatically improve point accuracy or guarantee calibration under misspecification.
 
 ### Problem Addressed
 
@@ -1103,28 +1249,22 @@ The current test suite covers:
 
 #### Next
 
+- [ ] repair trajectory test collection, timestamp comparisons, numerical validation, and package configuration;
+- [ ] define boundary behavior, array ownership, and posterior result semantics;
+- [ ] expose analytical posterior means, variances, and joint sampling;
 - [ ] estimate Brownian volatility from irregular observations;
 - [ ] reconstruct across multiple observed intervals;
 - [ ] introduce held-out reconstruction benchmarks;
 - [ ] implement RMSE and MAE;
 - [ ] implement likelihood and coverage diagnostics;
 - [ ] reconstruct partial node and feature observations;
+- [ ] support basic forecasting using only available past observations;
 - [ ] introduce a high-level user-facing inference API;
-- [ ] support NumPy, pandas, and CSV data adapters.
+- [ ] support NumPy, pandas, and CSV data adapters;
+- [ ] add a conjugate Bayesian Brownian baseline and posterior predictive evaluation (V7-A);
+- [ ] provide automated checks, reproducible experiment records, and a complete usage example.
 
-The immediate development path is therefore
-
-$$
-\boxed{
-\text{Brownian bridge}
-\rightarrow
-\text{volatility estimation}
-\rightarrow
-\text{multi-observation reconstruction}
-\rightarrow
-\text{held-out evaluation}.
-}
-$$
+The immediate target is a usable Brownian inference workflow that estimates parameters, returns posterior results for irregular and partial observations, and reports held-out accuracy and uncertainty. V7-A then extends that same workflow to parameter uncertainty. The implementation sequence and engineering/research acceptance gates above define completion.
 
 ---
 
