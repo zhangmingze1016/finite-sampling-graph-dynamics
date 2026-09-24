@@ -10,7 +10,7 @@ The project is built around a practical problem:
 
 The general inference pipeline is
 
-$$
+```math
 \text{observations}
 \longrightarrow
 \text{parameter estimation}
@@ -20,7 +20,7 @@ $$
 \text{reconstruction / forecasting}
 \longrightarrow
 \text{uncertainty and evaluation}.
-$$
+```
 
 Observation times are externally supplied and need not be equally spaced.
 
@@ -48,23 +48,23 @@ The principal objectives are to support:
 
 A central question is
 
-$$
+```math
 \boxed{
 \text{How much of a dynamical system may be recovered from limited observations?}
 }
-$$
+```
 
 A second question arises when observations themselves are costly:
 
-$$
+```math
 \boxed{
 \text{Where should the next observation be made?}
 }
-$$
+```
 
 The long-term objective is therefore not merely to reconstruct missing values, but to develop a general framework connecting
 
-$$
+```math
 \text{observation}
 \rightarrow
 \text{inference}
@@ -74,7 +74,7 @@ $$
 \text{evaluation}
 \rightarrow
 \text{observation design}.
-$$
+```
 
 ---
 
@@ -163,13 +163,13 @@ Adaptive refinement may improve numerical resolution and computational allocatio
 
 Thus,
 
-$$
+```math
 \boxed{
 \text{computational refinement}
 \neq
 \text{new statistical information}.
 }
-$$
+```
 
 ### Keep the User Interface Simple
 
@@ -224,47 +224,47 @@ The project therefore favors justified additions over the accumulation of algori
 
 For a system of $N$ nodes, each possessing $d$ features, the state at time $t$ is represented by
 
-$$
+```math
 X(t)\in\mathbb{R}^{N\times d}.
-$$
+```
 
 A trajectory evaluated at a finite ordered collection of $T$ times,
 
-$$
+```math
 t_0<t_1<\cdots<t_{T-1},
-$$
+```
 
 is represented by
 
-$$
+```math
 X\in\mathbb{R}^{T\times N\times d}.
-$$
+```
 
 The intervals
 
-$$
+```math
 t_{k+1}-t_k
-$$
+```
 
 need not be equal.
 
 Relations among nodes are represented by a weighted adjacency matrix
 
-$$
+```math
 A\in\mathbb{R}^{N\times N}.
-$$
+```
 
 Partial observations are represented by values together with a Boolean mask declaring which quantities were observed.
 
 A fundamental distinction of the framework is
 
-$$
+```math
 \boxed{
 \text{state}
 \neq
 \text{observation}.
 }
-$$
+```
 
 A state describes the system at a particular time.
 
@@ -367,9 +367,9 @@ The graph representation presently provides:
 - degree matrix;
 - graph Laplacian
 
-$$
+```math
 L=D-A;
-$$
+```
 
 - detection of directed and undirected adjacency matrices.
 
@@ -383,27 +383,27 @@ The dynamical model, rather than the `Graph` object itself, determines how that 
 
 The first reference dynamics implemented by the project is Brownian motion,
 
-$$
+```math
 dX_t=\sigma\,dW_t.
-$$
+```
 
 For two times $t_0<t_1$,
 
-$$
+```math
 X_{t_1} =
 X_{t_0} +
 \sigma\sqrt{t_1-t_0}\,Z,
-$$
+```
 
 where
 
-$$
+```math
 Z\sim\mathcal N(0,I).
-$$
+```
 
 Equivalently,
 
-$$
+```math
 X_{t_1}-X_{t_0}
 \sim
 \mathcal N
@@ -411,7 +411,7 @@ X_{t_1}-X_{t_0}
 0,
 \sigma^2(t_1-t_0)
 \right).
-$$
+```
 
 Because the variance depends directly upon the actual time interval, irregular sampling arises naturally.
 
@@ -434,7 +434,7 @@ Suppose a latent trajectory is governed by a stochastic dynamical model while on
 
 The reconstruction problem may be written generally as
 
-$$
+```math
 p\left(
 X_{\mathrm{missing}}
 \mid
@@ -443,7 +443,7 @@ X_{\mathrm{observed}},
 G,
 \theta
 \right),
-$$
+```
 
 where $G$ denotes relational structure and $\theta$ denotes model parameters.
 
@@ -457,32 +457,32 @@ Whenever possible, the framework should preserve the uncertainty associated with
 
 For Brownian dynamics, suppose two boundary states are known:
 
-$$
+```math
 X(t_L)=X_L,
 \qquad
 X(t_R)=X_R.
-$$
+```
 
 For an intermediate time
 
-$$
+```math
 t_L<t<t_R,
-$$
+```
 
 the conditional state follows a Brownian bridge distribution.
 
 Its mean is
 
-$$
+```math
 \mathbb E[X_t\mid X_L,X_R] =
 X_L +
 \frac{t-t_L}{t_R-t_L}
 (X_R-X_L),
-$$
+```
 
 and its conditional variance is
 
-$$
+```math
 \operatorname{Var}(X_t\mid X_L,X_R) =
 \sigma^2
 \frac{
@@ -490,7 +490,7 @@ $$
 }{
 t_R-t_L
 }.
-$$
+```
 
 The current implementation supports:
 
@@ -517,15 +517,15 @@ Target times need not be uniformly spaced.
 
 For a current interval
 
-$$
+```math
 [t_L,t_R],
-$$
+```
 
 the reconstruction algorithm considers the temporal midpoint
 
-$$
+```math
 t_M=\frac{t_L+t_R}{2}
-$$
+```
 
 and selects the available target time nearest to that midpoint.
 
@@ -555,21 +555,21 @@ A reconstruction method should be judged against observations which were not sup
 
 Given a complete trajectory,
 
-$$
+```math
 X_1,X_2,\ldots,X_9,
-$$
+```
 
 one experiment may retain
 
-$$
+```math
 X_1,X_3,X_5,X_7,X_9
-$$
+```
 
 while withholding
 
-$$
+```math
 X_2,X_4,X_6,X_8.
-$$
+```
 
 The model reconstructs the withheld states, which may then be compared with their known values.
 
@@ -577,23 +577,23 @@ Future evaluation will examine reconstruction under different observation geomet
 
 Point-error metrics will include quantities such as
 
-$$
+```math
 \operatorname{RMSE} =
 \sqrt{
 \frac{1}{m}
 \sum_{i=1}^{m}
 (\hat X_i-X_i)^2
 }
-$$
+```
 
 and
 
-$$
+```math
 \operatorname{MAE} =
 \frac{1}{m}
 \sum_{i=1}^{m}
 |\hat X_i-X_i|.
-$$
+```
 
 Because reconstruction is probabilistic, evaluation should also consider:
 
@@ -611,27 +611,27 @@ This common evaluation framework will allow future dynamical models to be compar
 
 The observation mechanism determines
 
-$$
+```math
 \boxed{
 \text{where and when information is observed},
 }
-$$
+```
 
 while the dynamical model determines
 
-$$
+```math
 \boxed{
 \text{how the underlying system may evolve}.
 }
-$$
+```
 
 A dynamical model therefore need not generate observation times.
 
 Given two successive observation times $t_i$ and $t_{i+1}$, the model governs the transition
 
-$$
+```math
 X(t_i)\longrightarrow X(t_{i+1}).
-$$
+```
 
 ---
 
@@ -643,11 +643,11 @@ It does not prescribe how those relationships affect the dynamics.
 
 For example, a future model may use the graph Laplacian through
 
-$$
+```math
 dX_t =
 -\alpha L X_t\,dt +
 \sigma\,dW_t,
-$$
+```
 
 but another dynamical model may use the same graph differently.
 
@@ -663,16 +663,16 @@ When no future observation is available, the task becomes forecasting.
 
 In probabilistic terms,
 
-$$
+```math
 p(X_t\mid Y_{\le T}),
 \qquad t<T,
-$$
+```
 
 describes smoothing, whereas
 
-$$
+```math
 p(X_{T+h}\mid Y_{\le T})
-$$
+```
 
 describes forecasting.
 
@@ -793,10 +793,10 @@ The common benchmark suite should distinguish three questions:
 
 For linear Gaussian models, a shared transition interface should expose the quantities in
 
-$$
+```math
 X_{t+\Delta}=F_\Delta X_t+b_\Delta+w_t,
 \qquad w_t\sim\mathcal N(0,Q_\Delta).
-$$
+```
 
 Brownian, OU, and graph models can then share inference machinery. Extract common interfaces when at least two working models need them; do not force future event or nonlinear models into an unsuitable abstraction.
 
@@ -882,11 +882,11 @@ Introduce relational information among nodes.
 
 A basic graph-coupled stochastic model may take the form
 
-$$
+```math
 dX_t =
 -\alpha L X_t\,dt +
 \sigma\,dW_t.
-$$
+```
 
 ### Core Methods
 
@@ -912,15 +912,15 @@ Separate latent states from noisy measurements.
 
 A general state-space representation takes the form
 
-$$
+```math
 X_{t+\Delta} =
 F_\Delta X_t+w_t,
-$$
+```
 
-$$
+```math
 Y_t =
 H_tX_t+v_t.
-$$
+```
 
 ### Core Methods
 
@@ -945,23 +945,23 @@ Relational information should be evaluated rather than trusted automatically.
 
 Candidate models may include
 
-$$
+```math
 M_1=\{\text{time}\},
-$$
+```
 
-$$
+```math
 M_2=\{\text{time, node graph}\},
-$$
+```
 
-$$
+```math
 M_3=\{\text{time, feature structure}\},
-$$
+```
 
 and
 
-$$
+```math
 M_4=\{\text{time, node graph, feature structure}\}.
-$$
+```
 
 ### Core Methods
 
@@ -988,17 +988,17 @@ Computational resolution should therefore be allocated adaptively.
 
 For Brownian bridges, the greatest conditional variance inside an interval occurs at its midpoint:
 
-$$
+```math
 V_{\max} =
 \sigma^2
 \frac{t_R-t_L}{4}.
-$$
+```
 
 For conditional path generation, this quantity may guide subdivision while
 
-$$
+```math
 V_{\max}>\varepsilon.
-$$
+```
 
 This is uncertainty conditional on the current path boundaries, which may include sampled latent states. After integrating out those states, the posterior uncertainty conditional on the original observations is unchanged. Use numerical or downstream task error to justify computational stopping tolerances; do not interpret subdivision as new evidence or as a reduction of observational uncertainty.
 
@@ -1026,11 +1026,11 @@ Given a limited observation budget, the framework should eventually identify obs
 
 A possible objective is
 
-$$
+```math
 t^* =
 \arg\max_t
 \operatorname{InformationGain}(t).
-$$
+```
 
 ### Core Methods
 
@@ -1067,27 +1067,27 @@ Bayesian inference is a staged capability, not work deferred until all other roa
 
 Earlier stages may estimate a parameter such as volatility by a single value
 
-$$
+```math
 \hat\sigma.
-$$
+```
 
 When observations are limited, however, the parameter itself may be uncertain.
 
 Bayesian inference instead considers
 
-$$
+```math
 p(\sigma\mid Y).
-$$
+```
 
 The posterior predictive distribution then becomes
 
-$$
+```math
 p(X_{\mathrm{missing}}\mid Y) =
 \int
 p(X_{\mathrm{missing}}\mid Y,\sigma)
 p(\sigma\mid Y)
 \,d\sigma.
-$$
+```
 
 ### Core Methods
 
@@ -1114,12 +1114,12 @@ Point-estimate and Bayesian workflows should share result conventions while reco
 
 The final uncertainty should reflect both
 
-$$
+```math
 \boxed{
 \text{state uncertainty} +
 \text{parameter uncertainty}.
 }
-$$
+```
 
 ---
 
@@ -1152,17 +1152,17 @@ Adaptive observation design
 
 The versions may therefore be understood as answering progressively broader questions:
 
-$$
+```math
 \text{V1: Can we reconstruct what we did not observe?}
-$$
+```
 
-$$
+```math
 \text{V2--V4: What structure should we use to reconstruct it?}
-$$
+```
 
-$$
+```math
 \text{V5--V7: What should we infer, trust, compute, and observe next?}
-$$
+```
 
 ---
 
