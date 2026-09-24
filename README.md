@@ -390,10 +390,8 @@ $$
 For two times $t_0<t_1$,
 
 $$
-X_{t_1}
-=
-X_{t_0}
-+
+X_{t_1} =
+X_{t_0} +
 \sigma\sqrt{t_1-t_0}\,Z,
 $$
 
@@ -476,10 +474,8 @@ the conditional state follows a Brownian bridge distribution.
 Its mean is
 
 $$
-\mathbb E[X_t\mid X_L,X_R]
-=
-X_L
-+
+\mathbb E[X_t\mid X_L,X_R] =
+X_L +
 \frac{t-t_L}{t_R-t_L}
 (X_R-X_L),
 $$
@@ -487,8 +483,7 @@ $$
 and its conditional variance is
 
 $$
-\operatorname{Var}(X_t\mid X_L,X_R)
-=
+\operatorname{Var}(X_t\mid X_L,X_R) =
 \sigma^2
 \frac{
 (t-t_L)(t_R-t)
@@ -583,8 +578,7 @@ Future evaluation will examine reconstruction under different observation geomet
 Point-error metrics will include quantities such as
 
 $$
-\operatorname{RMSE}
-=
+\operatorname{RMSE} =
 \sqrt{
 \frac{1}{m}
 \sum_{i=1}^{m}
@@ -595,8 +589,7 @@ $$
 and
 
 $$
-\operatorname{MAE}
-=
+\operatorname{MAE} =
 \frac{1}{m}
 \sum_{i=1}^{m}
 |\hat X_i-X_i|.
@@ -651,10 +644,8 @@ It does not prescribe how those relationships affect the dynamics.
 For example, a future model may use the graph Laplacian through
 
 $$
-dX_t
-=
--\alpha L X_t\,dt
-+
+dX_t =
+-\alpha L X_t\,dt +
 \sigma\,dW_t,
 $$
 
@@ -892,10 +883,8 @@ Introduce relational information among nodes.
 A basic graph-coupled stochastic model may take the form
 
 $$
-dX_t
-=
--\alpha L X_t\,dt
-+
+dX_t =
+-\alpha L X_t\,dt +
 \sigma\,dW_t.
 $$
 
@@ -924,14 +913,12 @@ Separate latent states from noisy measurements.
 A general state-space representation takes the form
 
 $$
-X_{t+\Delta}
-=
+X_{t+\Delta} =
 F_\Delta X_t+w_t,
 $$
 
 $$
-Y_t
-=
+Y_t =
 H_tX_t+v_t.
 $$
 
@@ -1002,8 +989,7 @@ Computational resolution should therefore be allocated adaptively.
 For Brownian bridges, the greatest conditional variance inside an interval occurs at its midpoint:
 
 $$
-V_{\max}
-=
+V_{\max} =
 \sigma^2
 \frac{t_R-t_L}{4}.
 $$
@@ -1041,8 +1027,7 @@ Given a limited observation budget, the framework should eventually identify obs
 A possible objective is
 
 $$
-t^*
-=
+t^* =
 \arg\max_t
 \operatorname{InformationGain}(t).
 $$
@@ -1097,8 +1082,7 @@ $$
 The posterior predictive distribution then becomes
 
 $$
-p(X_{\mathrm{missing}}\mid Y)
-=
+p(X_{\mathrm{missing}}\mid Y) =
 \int
 p(X_{\mathrm{missing}}\mid Y,\sigma)
 p(\sigma\mid Y)
@@ -1132,8 +1116,7 @@ The final uncertainty should reflect both
 
 $$
 \boxed{
-\text{state uncertainty}
-+
+\text{state uncertainty} +
 \text{parameter uncertainty}.
 }
 $$
