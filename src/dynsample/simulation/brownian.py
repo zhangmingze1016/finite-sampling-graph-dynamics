@@ -64,7 +64,7 @@ def brownian_step(
 
     if not np.isfinite(volatility) or volatility < 0:
         raise ValueError(
-            "volatility must be finite and positive"
+            "volatility must be finite and non-negative"
         )
 
     # The elapsed time may be irregular; nothing here supposes that
@@ -164,12 +164,12 @@ def simulate_brownian(
 
     if times.ndim != 1:
         raise ValueError(
-            "time must have shape (n_steps,)"
+            "times must have shape (n_steps,)"
         )
 
     if times.size == 0:
         raise ValueError(
-            "time must contain at least one time"
+            "times must contain at least one time"
         )
 
     if not np.all(np.isfinite(times)):
@@ -192,7 +192,7 @@ def simulate_brownian(
 
     if not np.isfinite(volatility) or volatility < 0:
         raise ValueError(
-            "volatility must be finite and positive"
+            "volatility must be finite and non-negative"
         )
 
     # Reserve the complete trajectory in advance.
