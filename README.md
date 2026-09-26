@@ -172,7 +172,7 @@ For each component of a Brownian bridge with positive volatility and endpoints a
 ```
 
 ```math
-\operatorname{Var}(X_t\mid X_L,X_R)
+\mathrm{Var}(X_t\mid X_L,X_R)
 =\sigma^2\frac{(t-t_L)(t_R-t)}{t_R-t_L}.
 ```
 
