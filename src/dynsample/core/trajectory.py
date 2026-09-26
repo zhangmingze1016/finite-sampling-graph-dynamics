@@ -106,6 +106,11 @@ class Trajectory:
                 "times must be strictly increasing"
             )
 
+        if not np.all(np.isfinite(self.values)):
+            raise ValueError(
+                "values must contain only finite values"
+            )
+
     def __len__(self) -> int:
         """
         Return the number of recorded times contained in the trajectory.

@@ -8,6 +8,27 @@ from dynsample.simulation.brownian import (
     simulate_brownian,
 )
 
+def test_simulate_brownian_rejects_shifeted_large_timestamp() -> None:
+    initial_state = State(
+        time = 1_000_000_000.0,
+        values = np.zeros((1, 1)),
+    )
+    times = np.array([
+        1_000_000_001.0,
+        1_000_000_002.0,
+    ])
+
+    with pytest.raises(
+        ValueError,
+        match =  "the first time must equal initial_state.time"
+    ):
+        simulate_brownian(
+            initial_state = initial_state,
+            times = times,
+            volatility = 1.0,
+            rng = np.random.default_rng(42),
+        )
+
 
 def test_brownian_step_returns_state() -> None:
     """A Brownian transition shall return a State of the proper form."""

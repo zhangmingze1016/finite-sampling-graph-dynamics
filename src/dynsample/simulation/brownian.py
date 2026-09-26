@@ -177,10 +177,7 @@ def simulate_brownian(
             "time must contain only finite values"
         )
 
-    if not np.isclose(
-        times[0],
-        initial_state.time,
-    ):
+    if times[0] != initial_state.time:
         raise ValueError(
             "the first time must equal initial_state.time"
         )

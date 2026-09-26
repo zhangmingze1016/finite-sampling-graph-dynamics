@@ -11,7 +11,7 @@ Node time series + timestamps
     -> Assess uncertainty, stability, and predictive value
 ```
 
-**Current status:** the repository implements core data structures, independent Brownian simulation, and Brownian bridge sampling. Unknown graph estimation, dynamic graph inference, and the reliability workflow below are planned, not implemented.
+**Current status:** the repository implements core data structures, independent Brownian and Ornstein–Uhlenbeck (OU) simulation, and Brownian bridge sampling. Unknown graph estimation, dynamic graph inference, and the reliability workflow below are planned, not implemented.
 
 ## Objective and Scope
 
@@ -43,12 +43,13 @@ The project does not currently promise causal discovery, inference of human inte
 | `Observation` | A time, values, and a Boolean observation mask of shape `(N, d)`. |
 | `Graph` | Weighted adjacency, node count, row-sum degree, degree matrix, and `D - adjacency`. |
 | Brownian simulation | Independent node-feature increments with one shared scalar volatility; arbitrary strictly increasing requested times. |
+| OU simulation | Exact scalar transitions, single-step and trajectory simulation on irregular times; shared scalar parameters and independent node-feature noise. |
 | Brownian bridge | Single-point and joint multi-point conditional sampling between two supplied endpoints. |
 | Validation | Unit tests and empirical checks of Brownian bridge means, variances, and multi-point covariance. |
 
 `Graph` stores supplied relationships; it does not learn them. An observation mask can represent missing entries, but the current bridge functions do not perform general masked-data inference. The `estimation`, `metrics`, and `sampling` packages are placeholders.
 
-Known correctness and packaging work is listed under [Immediate Development Work](#immediate-development-work). Passing the existing tests does not resolve those gaps.
+Remaining correctness and packaging verification work is listed under [Immediate Development Work](#immediate-development-work). Passing the existing tests does not resolve those gaps.
 
 ## Local Setup and Working Example
 
@@ -58,10 +59,9 @@ Run these commands from the repository root:
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
-export PYTHONPATH="$PWD/src${PYTHONPATH:+:$PYTHONPATH}"
 ```
 
-`pyproject.toml` is currently empty. Standard package installation is a pending task; the source-path setup above is the current development workflow.
+`requirements.txt` installs the project in editable mode with the `dev` and `plot` extras. `pyproject.toml` declares NumPy and SciPy as core dependencies, pytest for development, and Matplotlib for plotting. Clean-environment installation verification remains a release check.
 
 The following example uses implemented functions only:
 
@@ -92,14 +92,15 @@ print(sample.values.shape)  # (3, 3, 1): time, node, feature
 
 This draws a conditional path using only the two supplied endpoints. It does not estimate a graph, fit volatility, or recover the actual hidden path.
 
-After the source-path setup, run:
+After installation, run:
 
 ```bash
 python -m pytest -q
 python experiments/experiment_brownian_bridge.py
+python experiments/experiment_ou.py
 ```
 
-The experiment prints the bridge construction and displays a plot. Its import-time execution and verbose output are scheduled for cleanup.
+The Brownian bridge experiment prints the bridge construction and displays a plot. The OU experiment uses irregular sampling times and displays a sampled trajectory, its conditional mean, and pointwise 95% conditional intervals given the initial state and known parameters. These intervals describe process noise, not parameter-estimation uncertainty or simultaneous path coverage. Lines between sampled states are display connections, not reconstructed intermediate paths. Experiment entry points and optional verbose output remain cleanup tasks.
 
 ## State, Graph, and Dynamical Conventions
 
@@ -178,6 +179,24 @@ For each component of a Brownian bridge with positive volatility and endpoints a
 The current multi-point sampler selects a requested time near the temporal midpoint, samples it conditionally, and subdivides the remaining intervals. Reusing sampled boundaries preserves the joint bridge distribution; independently drawing each point from its endpoint marginal would not.
 
 Brownian simulation and bridges remain analytical reference tools. They are not MCMC, and a full Brownian reconstruction product is not a prerequisite for graph estimation. Zero-volatility behavior needs an explicit contract: the current code interpolates even unequal endpoints, whereas a strictly zero-noise Brownian process cannot produce such endpoints.
+
+### OU Reference Model
+
+The implemented OU model applies independently to every node-feature component, with shared scalar parameters:
+
+```math
+dX_t=\alpha(\mu-X_t)\,dt+\sigma\,dW_t.
+```
+
+For positive `alpha`, `ou_transition` returns the exact transition coefficient, affine offset, and noise variance:
+
+```math
+F_\Delta=e^{-\alpha\Delta},\qquad
+c_\Delta=\mu(1-F_\Delta),\qquad
+q_\Delta=\frac{\sigma^2}{2\alpha}(1-e^{-2\alpha\Delta}).
+```
+
+`ou_step` samples the next state and `simulate_ou` returns a trajectory including the initial state. Each step uses its actual elapsed time. Zero mean reversion reduces to Brownian motion; zero volatility gives deterministic evolution. This is forward simulation with known parameters, not OU bridge reconstruction, parameter fitting, or graph inference.
 
 ### Probability, Bayesian Inference, and MCMC
 
@@ -276,15 +295,13 @@ Optional later Bayesian extensions may address fixed-structure parameter uncerta
 
 ## Immediate Development Work
 
-The next development cycle establishes correctness and one minimal estimation experiment. Source changes below are pending.
+Completed groundwork includes repaired trajectory test collection, exact initial-time matching in Brownian simulation, finite-value validation for states and observed entries, package configuration, and independent scalar OU simulation. Remaining work is listed below.
 
 | Priority | Change | Acceptance criterion |
 | --- | --- | --- |
-| P0 | Repair trajectory tests | Move nested tests to module scope, fix `np.zeroes`, and construct a genuinely mismatched time/value case; confirm collection and execution. |
-| P0 | Correct initial-time comparisons | Define a time-precision policy that does not accept large absolute timestamp discrepancies through default relative tolerance. |
-| P0 | Validate numerical values | Require finite complete-state values and finite observed entries; define permitted placeholders under a false observation mask. |
 | P0 | Fix graph/drift semantics before estimation | Document source/target conversion, self-dynamics, feature blocks, signed weights, and model-specific graph constraints. |
-| P0 | Complete packaging | Populate `pyproject.toml`, separate core and development/plotting dependencies, and verify installation in a clean environment. |
+| P0 | Verify packaging | Verify editable installation and examples in a clean environment; package configuration and dependency extras are implemented. |
+| P0 | Complete OU validation | Add committed trajectory tests for irregular times and single-time input, transition moment/composition checks, and invalid-input cases. Current OU tests cover single-step behavior. |
 | P1 | Define remaining data contracts | Specify zero-volatility bridge behavior, empty inputs, and array copying/sharing rules. |
 | P1 | Clean up the bridge experiment | Add an execution entry point, optional verbose tracing, and separate plotting from reusable computation. |
 | P2 | Improve bridge queue handling | Replace front-removal from a list with a queue; profile other searches before optimizing and preserve joint covariance. |
@@ -304,7 +321,7 @@ Use no-edge, directed-chain, and sparse stable examples with recorded true param
 
 Suggested five work sessions, adjusted to actual progress:
 
-1. Repair validation/tests and establish installability and conventions.
+1. Complete OU validation and clean-environment installation checks; establish graph/drift conventions.
 2. Implement known-structure linear-SDE simulation and numerical checks.
 3. Fit simple discrete-time prediction baselines with chronological splits.
 4. Fit a small fixed-structure continuous-time model and inspect multiple initializations.
@@ -364,6 +381,7 @@ Adopt an extension when an established use case or benchmark demonstrates the li
 src/dynsample/
     core/                       # State, Trajectory, Observation, Graph
     simulation/brownian.py      # Implemented reference simulation
+    simulation/ou.py            # Exact independent scalar OU simulation
     inference/reconstruction/
         brownian_bridge.py      # Implemented conditional sampling
     estimation/                 # Placeholder
@@ -371,9 +389,10 @@ src/dynsample/
     sampling/                   # Placeholder
 experiments/
     experiment_brownian_bridge.py
+    experiment_ou.py
 tests/
 requirements.txt
-pyproject.toml                  # Pending package configuration
+pyproject.toml                  # Package metadata and dependency extras
 ```
 
 Extract shared transition and estimation interfaces when working implementations demonstrate the need. Keep computation, experiment evaluation, and visualization separable.
@@ -385,7 +404,10 @@ Extract shared transition and estimation interfaces when working implementations
 - [x] Single-point and joint multi-point Brownian bridge sampling.
 - [x] Empirical checks of bridge mean, variance, and joint covariance.
 - [x] Brownian bridge demonstration.
-- [ ] Correctness and packaging work listed above.
+- [x] Independent scalar OU transitions and trajectory simulation on irregular times.
+- [x] OU visualization with conditional mean and pointwise state intervals.
+- [x] Core finite-value validation, repaired trajectory tests, and package configuration.
+- [ ] Remaining correctness checks and clean-environment installation verification listed above.
 - [ ] Known-structure linear-SDE simulation and parameter-estimation benchmark.
 - [ ] R1: unknown static relationship estimation.
 - [ ] R2: dynamic relationship estimation.

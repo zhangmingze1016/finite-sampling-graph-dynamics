@@ -37,15 +37,12 @@ def test_trajectory_state_at() -> None:
         [[2.0], [3.0]]
     ])
 
-    Trajectory(
+    trajectory = Trajectory(
         times = times,
         values = values,
     )
 
-    trajectory = Trajectory(
-            times = times,
-            values = values
-        )
+
 
     state = trajectory.state_at(1)
 
@@ -60,45 +57,47 @@ def test_trajectory_state_at() -> None:
         ])
     )
 
-    def test_trajectory_requires_matching_time_steps() -> None:
-        times = np.array([
-            0.0,
-            0.1,
-            0.2
-        ])
+def test_trajectory_requires_matching_time_steps() -> None:
+    times = np.array([
+        0.0,
+        0.1,
+        0.2
+    ])
 
-        with pytest.raises(ValueError):
-            Trajectory(
-                times = times,
-                values = values,
-            )
+    values = np.zeros((2,5,2))
 
-    def test_trajectory_requires_increasing_times() -> None:
-        times = np.array([
-            0.0,
-            0.2,
-            0.1
-        ])
+    with pytest.raises(ValueError):
+        Trajectory(
+            times = times,
+            values = values,
+        )
 
-        values = np.zeroes((3, 5, 2))
+def test_trajectory_requires_increasing_times() -> None:
+    times = np.array([
+        0.0,
+        0.2,
+        0.1
+    ])
 
-        with pytest.raises(ValueError):
-            Trajectory(
-                times = times,
-                values = values,
-            )
+    values = np.zeros((3, 5, 2))
 
-    def test_trajectory_requires_three_dimensional_values() -> None:
-        times = np.array([
-            0.0,
-            0.1,
-            0.2,
-        ])
+    with pytest.raises(ValueError):
+        Trajectory(
+            times = times,
+            values = values,
+        )
 
-        values = np.zeroes((3,5))
+def test_trajectory_requires_three_dimensional_values() -> None:
+    times = np.array([
+        0.0,
+        0.1,
+        0.2,
+    ])
 
-        with pytest.raises(ValueError):
-            Trajectory(
-                times = times,
-                values = values,
-            )
+    values = np.zeros((2,5,2))
+
+    with pytest.raises(ValueError):
+        Trajectory(
+            times = times,
+            values = values,
+        )

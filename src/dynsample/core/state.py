@@ -47,6 +47,11 @@ class State:
         if not np.isfinite(self.time):
             raise ValueError("time must be finite")
 
+        if not np.all(np.isfinite(self.values)):
+            raise ValueError(
+                "values must contain only finite values"
+            )
+
     @property
     def n_nodes(self) -> int:
         """Number of nodes in the system."""

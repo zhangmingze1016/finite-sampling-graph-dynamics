@@ -94,6 +94,11 @@ class Observation:
                 "time must be finite"
             )
 
+        if not np.all(np.isfinite(self.values[self.mask])):
+            raise ValueError(
+                "observed values must contain only finite values"
+            )
+
     @property
     def n_nodes(self) -> int:
         """Return the number of nodes belonging to the observation."""
